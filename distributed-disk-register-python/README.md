@@ -108,6 +108,12 @@ Bu proje, Sistem Programlama dersi kapsamında geliştirilmiş, hata-tolere (fau
 - Node'lar çökse bile sistem devam eder
 - Yeni node'lar otomatik olarak kayıt olur ve yük dengelemeye katılır
 
+### ✅ 11. Otomatik Test ve Performans Ölçümü
+- Otomatik test scripti (`tests/test_load_distribution.py`) ile sistem test edilebilir
+- Buffered ve Unbuffered IO modları otomatik karşılaştırılır
+- Mesaj gönderme süreleri ölçülür ve raporlanır
+- Yük dağılımı analizi otomatik yapılır
+
 ## 🚀 Kurulum ve Çalıştırma
 
 ### Gereksinimler
@@ -203,6 +209,33 @@ Sunucu Yaniti: VALUE Merhaba Dünya
 - ✅ İkinci 500 mesaj yeni node'u da kullanır
 - ✅ Sistem dengeli dağılıma doğru evrilir
 
+### Test 4: IO Modu Performans Karşılaştırması
+**Amaç:** Buffered ve Unbuffered IO modlarının performans farkını ölçmek
+
+**Yapılandırma:**
+- Otomatik test scripti: `tests/test_load_distribution.py`
+- 1 lider + 4 worker node
+- 100 mesaj gönderilir (her iki mod için ayrı ayrı)
+- Tolerance=2
+
+**Çalıştırma:**
+```bash
+cd tests
+python test_load_distribution.py
+```
+
+**Beklenen Sonuçlar:**
+- ✅ Buffered IO: Daha hızlı yazma süresi (bellek buffer kullanımı sayesinde)
+- ✅ Unbuffered IO: Daha yavaş ama güvenli yazma (doğrudan disk erişimi)
+- ✅ Her iki modda da mesaj dağılımı dengeli
+- ✅ Test sonunda her iki modun süre karşılaştırması ekrana yazdırılır
+
+**Test Scripti Özellikleri:**
+- Otomatik olarak lider ve node'ları başlatır
+- İki farklı IO moduyla test yapar
+- Mesaj gönderme sürelerini ölçer ve karşılaştırır
+- Test bitiminde tüm süreçleri temizler
+
 ## 📁 Proje Yapısı
 
 ```
@@ -210,20 +243,36 @@ distributed-disk-register-python/
 ├── proto/
 │   └── family.proto              # Protobuf tanımları
 ├── generated/
+│   ├── __init__.py              # Generated modül init
 │   ├── family_pb2.py            # Üretilen protobuf kodları
-│   └── family_pb2_grpc.py       # Üretilen gRPC kodları
+│   ├── family_pb2_grpc.py       # Üretilen gRPC kodları
+│   └── __pycache__/             # Python cache
 ├── src/
+│   ├── __init__.py              # Src modül init
 │   ├── main.py                  # Ana program (unified entry point)
 │   ├── server.py                # Lider implementasyonu
 │   ├── node.py                  # Worker node implementasyonu
-│   └── client.py                # İstemci programı
-├── leader_metadata/
-│   └── message_mapping.txt      # Mesaj-node eşleşmeleri
-├── storage_node_1/              # Node 1'in disk alanı
-├── storage_node_2/              # Node 2'nin disk alanı
+│   ├── client.py                # İstemci programı
+│   ├── __pycache__/             # Python cache
+│   └── leader_metadata/         # Lider metadata klasörü
+│       └── message_mapping.txt  # Mesaj-node eşleşmeleri
+├── tests/
+│   ├── README.md                # Test dokümantasyonu
+│   ├── test_load_distribution.py # Otomatik test scripti (IO performans testi)
+│   └── tolerance.conf           # Test için tolerans konfigürasyonu
+├── docs/
+│   └── USAGE.md                 # Kullanım kılavuzu
+├── leader_messages/             # Lider'in kendi mesaj storage'ı (runtime)
+├── storage_node_1/              # Node 1'in disk alanı (runtime)
+├── storage_node_2/              # Node 2'nin disk alanı (runtime)
+├── storage_node_N/              # Node N'nin disk alanı (runtime)
+├── .gitignore                   # Git ignore kuralları
 ├── tolerance.conf               # Hata tolerans konfigürasyonu
-└── README.md                    # Bu dosya
+├── TO-DOs.md                    # Proje görevleri ve durum takibi
+└── README.md                    # Bu dosya (proje dokümantasyonu)
 ```
+
+**Not:** `storage_node_*`, `leader_messages` ve `leader_metadata` klasörleri runtime'da otomatik oluşturulur ve `.gitignore` ile göz ardı edilir.
 
 ## 🔍 Teknik Detaylar
 
